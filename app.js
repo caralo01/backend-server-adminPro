@@ -1,37 +1,33 @@
-//Requires
+'use strict'
+
 var express = require('express');
-var mongoose = require('mongoose');
+var bodyParser = require('body-parser');
 
 // Inicializar variables
 var app = express(); // defino el servidor
 
-var port = process.env.PORT || 3977; //Poner puerto por defecto
+//cargar rutas
+var user_routes = require('./routes/usuario');
 
-//conexion a la BBDD
-mongoose.connection.openUri('mongodb://localhost:27017/hospitalDB', (err, res)=>{
-  //url para conectar con la bbdd 27017 puerto por defecto
-  if(err){
-    throw err;
-  }
-  //else{
-    console.log("La base de datos está corriendo correctamente...");
+//BodyParser
+app.use(bodyParser.urlencoded({extended:false}));
+app.use(bodyParser.json());
 
-  //  app.listen(port, function(){
-  //    console.log("Servidor escuchando http://localhost:"+port);
-  //  });
-  //}
+//configurar cabeceras http
+//middlewares
+/*
+app.use((req, res, next) =>{
+  res.header('Access-Control-Allow-Origin', '*'); //Permitemos el acceso a todos los dominios
+  res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
+  res.header('Access-Control-Allow-Methods', 'GET, POSTS, OPTIONS, PUT, DELETE'); //Permitemos los métodos http mas comuines
+  res.header('Allow','GET, POSTS, OPTIONS, PUT, DELETE');
 
+  next();
 });
+*/
 
-//Rutas
-app.get('/', (req, res, next) =>{
-  res.status(403).json({
-    ok: true,
-    mensaje: 'Petitición realizada correctamente'
-  })
-} )
+//rutas bases
+app.use('/api', user_routes);
 
-//Escuchar peticiones, puerto y mensaje
-app.listen(3000, () => {
-  console.log('Express server puerto 3000: \x1b[32m',  'online');
-});
+
+module.exports = app;
