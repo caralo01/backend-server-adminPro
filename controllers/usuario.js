@@ -16,18 +16,28 @@ var Usuario = require('../models/usuario');
 // Obtener todos los usuarios
 // =============================
 function getUsuarios(req, res){
-  Usuario.find({}, 'nombre email role img').exec((err, usuarios) => {
-    if(err){
-      res.status(500).send({message: 'Error en la petición', error: err});    
-    }
-    else{
-      if(!usuarios){
-        res.status(404).send({message: 'No hay usuarios en la BBDD'});
+
+  var desde = req.query.desde || 0;
+  desde = Number(desde);
+
+  Usuario.find({}, 'nombre email role img')
+    .skip(desde)
+    .limit(5)
+    .exec((err, usuarios) => {
+      if(err){
+        res.status(500).send({ok: false, message: 'Error en la petición', error: err});    
       }
       else{
-        res.status(200).send({usuarios});
+        if(!usuarios){
+          res.status(404).send({ok: false, message: 'No hay usuarios en la BBDD'});
+        }
+        else{
+          Usuario.count({}, (err, total) => {
+            res.status(200).send({ok: true, usuarios: usuarios, total: total});
+          })
+          
+        }
       }
-    }
   });
   
 }
@@ -57,10 +67,10 @@ function saveUsuario(req, res){
   */
   usuario.save((err, usuarioGuardado) =>{
     if(err){
-      res.status(400).send({message: 'Error en la petición', error: err});
+      res.status(400).send({ok: false, message: 'Error en la petición', error: err});
     }
     else{
-      res.status(201).send({usuarioGuardado});
+      res.status(201).send({ok: true, usuario: usuarioGuardado});
     }
   });
   
@@ -77,15 +87,15 @@ function updateUsuario(req, res){
 
   Usuario.findByIdAndUpdate(userId, body, (err, userUpdated) => {
     if(err){
-      res.status(500).send({message: 'Error en la petición'});
+      res.status(500).send({ok: false, message: 'Error en la petición', errors: err});
     }
     else{
       if(!userUpdated){
-        res.status(400).send({message: 'No se ha podido actualizar el usuario', errors: err});
+        res.status(400).send({ok: false, message: 'No se ha podido actualizar el usuario', errors: err});
       }
       else{
         userUpdated.password = ':)';
-        res.status(200).send({user: userUpdated});
+        res.status(200).send({ok: true, usuario: userUpdated});
       }
     }
   });
@@ -100,15 +110,15 @@ function deleteUsuario(req, res){
 
   Usuario.findByIdAndRemove(userId, (err, userRemoved) => {
     if(err){
-      res.status(500).send({message: 'Error en la petición'});
+      res.status(500).send({ok: false, message: 'Error en la petición', errors: err});
     }
     else{
       if(!userRemoved){
-        res.status(400).send({message: 'No existe ese usuario', errors: err});
+        res.status(400).send({ok: false, message: 'No existe ese usuario', errors: err});
       }
       else{
         userRemoved.password = ':)';
-        res.status(200).send({user: userRemoved});
+        res.status(200).send({ok: true, usuario: userRemoved});
       }
     }
   });

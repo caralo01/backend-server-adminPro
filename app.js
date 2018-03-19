@@ -1,13 +1,21 @@
-'use strict'
+var user_routes = require('./routes/usuario');'use strict'
 
 var express = require('express');
 var bodyParser = require('body-parser');
+var fileUpload = require('express-fileupload');
 
 // Inicializar variables
 var app = express(); // defino el servidor
 
+
 //cargar rutas
 var user_routes = require('./routes/usuario');
+var hospital_routes = require('./routes/hospital');
+var medico_routes = require('./routes/medico');
+var busqueda_routes = require('./routes/busqueda');
+var upload_routes = require('./routes/upload');
+var imagen_routes = require('./routes/imagen');
+
 
 //BodyParser
 app.use(bodyParser.urlencoded({extended:false}));
@@ -26,8 +34,17 @@ app.use((req, res, next) =>{
 });
 */
 
+//Configurar archivos de subida
+app.use(fileUpload());
+
 //rutas bases
 app.use('/api', user_routes);
+app.use('/api', hospital_routes);
+app.use('/api', medico_routes);
+app.use('/api', busqueda_routes);
+app.use('/api', upload_routes);
+app.use('/api', imagen_routes);
+
 
 
 module.exports = app;

@@ -9,7 +9,7 @@ var SEED = require('../config/config').SEED;
 // =============================
 exports.verificaToken = function(req, res, next) {
 
-    if(!req.headers.authorization){
+  if(!req.headers.authorization){
     return res.status(403).send({message: 'La petición no  tiene la cabecera de autenticación'})
   }
 
