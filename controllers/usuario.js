@@ -4,13 +4,19 @@
 
 //var path = require('path'); // para trabajar con el sistema de ficheros
 var bcrypt = require('bcryptjs'); //para encriptar passwords
-
 var jwt = require('jsonwebtoken'); //token
 
 var SEED = require('../config/config').SEED; //Clave secreta
+const GOOGLE_CLIENT_ID = require('../config/config').GOOGLE_CLIENT_ID; //Clave de cliente id
+const GOOGLE_SECRET = require('../config/config').GOOGLE_SECRET; //Clave secreta de google
 
 var Usuario = require('../models/usuario');
 
+const {OAuth2Client} = require('google-auth-library');
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+var async = require('asyncawait/async');
+var await = require('asyncawait/await');
 
 // =============================
 // Obtener todos los usuarios
@@ -124,18 +130,13 @@ function deleteUsuario(req, res){
   });
 }
 
-
-
-
 // =============================
-// Crear nuevo usuario
+// Iniciar sesion
 // =============================
 function login(req, res){
   var body = req.body;
 
   Usuario.findOne({ email: body.email }, (err, usuarioDB) => {
-    console.log(err);
-
     if (err) {
       res.status(500).send({ ok: false, mensaje: 'Error al buscar usuario', errors: err });
     }
@@ -160,10 +161,114 @@ function login(req, res){
   })
 }
 
+
+// =============================
+// Iniciar sesion Google
+// =============================
+
+// Configuraciones de Google
+var verifyAsync = async (function (token) {
+    const ticket = await (client.verifyIdToken({
+        idToken: token,
+        audience: process.env.CLIENT_ID, // Specify the CLIENT_ID of the app that accesses the backend
+        // Or, if multiple clients access the backend:
+        //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+    }));
+
+    const payload = ticket.getPayload();
+    return {
+        nombre: payload.name,
+        email: payload.email,
+        img: payload.picture,
+        google: true
+    };
+});
+
+var loginGoogle = async (function loginGoogleAsync(req, res){
+
+  var token = req.body.token;
+
+  var googleUser = await ( verifyAsync(token)
+    .then( user => {
+      return user;
+    })
+    .catch(e => {
+          return {
+            ok: false,
+            errors: e,
+            mensaje: 'Token no válido'
+          };
+    }));
+  if(googleUser.ok == false){
+    return res.status(403).json(googleUser);
+  }
+  Usuario.findOne({email: googleUser.email}, 
+    (err, usuarioDB) => {
+      if (err) {
+        return res.status(500).json({
+          ok: false,
+          errors: err,
+          mensaje: 'Error al buscar usuario - login',
+        });
+      }
+      if (usuarioDB) {
+        if (usuarioDB.google === false) {
+          return res.status(400).json({
+            ok: false,
+            err: {
+              message: 'Debe de usar su autenticación normal'
+            }
+          });
+        } 
+        else {
+          var token = jwt.sign({
+            usuario: usuarioDB
+          }, SEED, {
+            expiresIn: 14400
+          });
+          return res.status(200).json({
+            ok: true,
+            usuario: usuarioDB,
+            token: token,
+          });
+        }
+      } 
+      else {
+        // Si el usuario no existe en nuestra base de datos
+        var usuario = new Usuario();
+        usuario.nombre = googleUser.nombre;
+        usuario.email = googleUser.email;
+        usuario.img = googleUser.img;
+        usuario.google = true;
+        usuario.password = ':)';
+        usuario.save((err, usuarioDB) => {
+          if (err) {
+            return res.status(500).json({
+              ok: false,
+              mensaje: 'Error al crear usuario - google',
+              errors: err
+            });
+          };
+          var token = jwt.sign({
+            usuario: usuarioDB
+          }, SEED, {
+            expiresIn: 14400
+          });
+          return res.json({
+            ok: true,
+            usuario: usuarioDB,
+            token,
+          });
+        });
+      }
+  });
+})
+
 module.exports = {
   getUsuarios,
   saveUsuario,
   updateUsuario,
   deleteUsuario,
-  login
+  login,
+  loginGoogle
 };

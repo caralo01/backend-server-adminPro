@@ -21,6 +21,7 @@ api.post('/usuarios', UsuarioController.saveUsuario);
 api.put('/usuario/:id', mdAutenticacion.verificaToken, UsuarioController.updateUsuario); 
 api.delete('/usuario/:id', mdAutenticacion.verificaToken, UsuarioController.deleteUsuario);  
 api.post('/login', UsuarioController.login);
+api.post('/login/google', UsuarioController.loginGoogle);
 
 /*
 api.post('/register', UserController.saveUser);
