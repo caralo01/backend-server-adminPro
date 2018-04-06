@@ -23,16 +23,14 @@ app.use(bodyParser.json());
 
 //configurar cabeceras http
 //middlewares
-/*
 app.use((req, res, next) =>{
   res.header('Access-Control-Allow-Origin', '*'); //Permitemos el acceso a todos los dominios
   res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
-  res.header('Access-Control-Allow-Methods', 'GET, POSTS, OPTIONS, PUT, DELETE'); //Permitemos los métodos http mas comuines
-  res.header('Allow','GET, POSTS, OPTIONS, PUT, DELETE');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE'); //Permitemos los métodos http mas comuines
+  res.header('Allow','GET, POST, OPTIONS, PUT, DELETE');
 
   next();
 });
-*/
 
 //Configurar archivos de subida
 app.use(fileUpload());
